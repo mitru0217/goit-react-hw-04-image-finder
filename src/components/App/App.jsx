@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import axios from 'axios';
 import { RotatingLines } from 'react-loader-spinner';
 import SearchForm from 'components/SearchForm/SearchForm';
 import { ImageGallery } from 'components/ImageGallery/ImageGallery';
@@ -17,31 +18,59 @@ class App extends Component {
     query: '',
     page: 1,
     images: [],
+    total: null,
     loading: false,
+    errorMsg: '',
   };
-
+  componentDidMount() {
+    this.setState(prevState => ({
+      pages: prevState.pages + 1,
+    }));
+  }
   componentDidUpdate(prevProps, prevState) {
     if (
       prevState.page !== this.state.page ||
       prevState.query !== this.state.query
     ) {
-      this.setState({ loading: true, images: [] });
-      fetch(
-        `https://pixabay.com/api/?q=${this.state.query}&page=${this.state.page}&key=30307966-ea2e6055e88053146b4d64f93&image_type=photo&orientation=horizontal&per_page=12`
-      )
-        .then(res => {
-          if (res.ok) {
-            return res.json();
-          }
-          return Promise.reject(
-            new Error(`There are no images for ${this.state.query}`)
-          );
-        })
-        .then(images => this.setState({ images }))
-        .catch(error => this.setState({ error }))
-        .finally(() => this.setState({ loading: false }));
+      this.loadImages();
+      // Fetch without Axios
+      // fetch(
+      //   `https://pixabay.com/api/?q=${this.state.query}&page=${this.state.page}&key=30307966-ea2e6055e88053146b4d64f93&image_type=photo&orientation=horizontal&per_page=12`
+      // )
+      //   .then(res => {
+      //     if (res.ok) {
+      //       return res.json();
+      //     }
+      //     return Promise.reject(
+      //       new Error(`There are no images for ${this.state.query}`)
+      //     );
+      //   })
+      //   .then(images => this.setState({ images }))
+      //   .catch(error => this.setState({ error }))
+      //   .finally(() => this.setState({ loading: false }));
     }
   }
+
+  loadImages = async () => {
+    const { query, page } = this.state;
+    try {
+      this.setState({ loading: true, images: [] });
+      const images = await axios.get(
+        `https://pixabay.com/api/?q=${query}&page=${page}&key=30307966-ea2e6055e88053146b4d64f93&image_type=photo&orientation=horizontal&per_page=12`
+      );
+      this.setState(prevState => ({
+        images: [...prevState.images, ...images.data.hits],
+        total: images.data.total,
+        errorMsg: '',
+      }));
+    } catch (error) {
+      this.setState({
+        errorMsg: 'Error while loading data. Try again later.',
+      });
+    } finally {
+      this.setState({ loading: false });
+    }
+  };
 
   addImages = query => {
     this.setState({
@@ -58,8 +87,7 @@ class App extends Component {
   };
 
   render() {
-    const { hits, total } = this.state.images;
-    const { loading, query } = this.state;
+    const { images, total, loading, query } = this.state;
 
     return (
       <>
@@ -79,10 +107,10 @@ class App extends Component {
           {!query ? (
             <Span>While there is nothing to show</Span>
           ) : (
-            <ImageGallery images={hits} />
+            <ImageGallery images={images} />
           )}
 
-          {query && total !== 0 && !loading && (
+          {images.length > 0 && query && (
             <LoadMoreBtn onClick={this.loadMore}>Load more</LoadMoreBtn>
           )}
         </Container>
