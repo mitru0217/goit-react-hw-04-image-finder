@@ -17,6 +17,7 @@ class App extends Component {
   state = {
     query: '',
     page: 1,
+    perPage: 12,
     images: [],
     total: null,
     loading: false,
@@ -24,7 +25,8 @@ class App extends Component {
   };
   componentDidMount() {
     this.setState(prevState => ({
-      pages: prevState.pages + 1,
+      pages: prevState.pages,
+      perPage: prevState.perPage,
     }));
   }
   componentDidUpdate(prevProps, prevState) {
@@ -52,14 +54,15 @@ class App extends Component {
   }
 
   loadImages = async () => {
-    const { query, page } = this.state;
+    const { query, page, perPage } = this.state;
     try {
       this.setState({ loading: true, images: [] });
       const images = await axios.get(
-        `https://pixabay.com/api/?q=${query}&page=${page}&key=30307966-ea2e6055e88053146b4d64f93&image_type=photo&orientation=horizontal&per_page=12`
+        `https://pixabay.com/api/?q=${query}&page=${page}&key=30307966-ea2e6055e88053146b4d64f93&image_type=photo&orientation=horizontal&per_page=${perPage}`
       );
       this.setState(prevState => ({
         images: [...prevState.images, ...images.data.hits],
+        // perPage: prevState.perPage,
         total: images.data.total,
         errorMsg: '',
       }));
@@ -81,8 +84,10 @@ class App extends Component {
   loadMore = () => {
     this.setState(prevState => ({
       page: prevState.page + 1,
+      perPage: prevState.perPage + 12,
       loading: true,
       query: prevState.query,
+      images: [],
     }));
   };
 
