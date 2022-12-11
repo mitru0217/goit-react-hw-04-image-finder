@@ -79,6 +79,7 @@ class App extends Component {
     this.setState({
       query: query,
       page: 1,
+      perPage: 12,
     });
   };
   loadMore = () => {
@@ -93,8 +94,9 @@ class App extends Component {
   };
 
   render() {
-    const { images, total, loading, query } = this.state;
-
+    const { images, total, loading, page, perPage, query } = this.state;
+    const totalPages = Math.ceil(total / perPage);
+    console.log(totalPages);
     return (
       <>
         <SearchForm onSubmit={this.addImages} />
@@ -117,7 +119,7 @@ class App extends Component {
             <ImageGallery images={images} />
           )}
 
-          {images.length > 0 && query && (
+          {images.length > 0 && query && page !== totalPages && (
             <LoadMoreBtn onClick={this.loadMore}>Load more</LoadMoreBtn>
           )}
         </Container>
@@ -127,3 +129,10 @@ class App extends Component {
 }
 
 export default App;
+
+// const totalPages = Math.ceil(totalHits / imageApiService.perPage);
+// if (imageApiService.page === totalPages) {
+//   Notify.warning(
+//     "We're sorry, but you've reached the end of search results."
+//   );
+// }
