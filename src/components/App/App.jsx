@@ -87,7 +87,8 @@ class App extends Component {
       perPage: prevState.perPage + 12,
       loading: true,
       query: prevState.query,
-      images: [],
+      // images: [],
+      total: null,
     }));
   };
 
@@ -104,6 +105,7 @@ class App extends Component {
               <InValidQuery> {query}</InValidQuery>
             </Warning>
           )}
+
           {loading && (
             <Loading>
               <RotatingLines strokeColor="blue" />

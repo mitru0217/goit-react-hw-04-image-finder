@@ -7,40 +7,13 @@ import {
   GalleryImg,
 } from 'components/ImageGalleryItem/ImageGalleryItem.styled';
 
-// const modalStyles = {
-//   content: {
-//     position: 'absolute',
-//     top: '50%',
-//     left: '50%',
-//     right: 'auto',
-//     bottom: 'auto',
-//     marginRight: '-50%',
-//     transform: 'translate(-50%, -50%)',
-//     padding: '0',
-//     width: '800px',
-//     height: '400px',
-//   },
-//   overlay: {
-//     position: 'fixed',
-//     top: 0,
-//     left: 0,
-//     right: 0,
-//     bottom: 0,
-//     backgroundColor: 'rgba(0,0,0,0.7)',
-//   },
-// };
-
 Modal.setAppElement('#modal-root');
 
 export class ImageGalleryItem extends Component {
   state = {
     isModalOpen: false,
   };
-  // toggleModal = () => {
-  //   this.setState(prevState => ({
-  //     isModalOpen: !prevState.isModalOpen,
-  //   }));
-  // };
+
   openModal = () => {
     this.setState({ isModalOpen: true });
   };
