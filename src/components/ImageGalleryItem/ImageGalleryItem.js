@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-// import { ImageModal } from 'components/Modal/Modal';
+import React, { useState } from 'react';
 import { ModalImg, modalStyles } from 'components/Modal/Modal.styled';
 import Modal from 'react-modal';
 import {
@@ -9,39 +8,35 @@ import {
 
 Modal.setAppElement('#modal-root');
 
-export class ImageGalleryItem extends Component {
-  state = {
-    isModalOpen: false,
+const ImageGalleryItem = ({ webformatURL, largeImageURL, tags }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => {
+    setIsModalOpen(true);
   };
 
-  openModal = () => {
-    this.setState({ isModalOpen: true });
+  const closeModal = () => {
+    setIsModalOpen(false);
   };
 
-  closeModal = () => {
-    this.setState({ isModalOpen: false });
-  };
-  render() {
-    const { isModalOpen } = this.state;
-    const { webformatURL, largeImageURL, tags } = this.props;
+  return (
+    <>
+      <GalleryItem>
+        <GalleryImg
+          src={webformatURL}
+          alt={tags}
+          onClick={openModal}
+        ></GalleryImg>
+      </GalleryItem>
+      <Modal
+        isOpen={isModalOpen}
+        style={modalStyles}
+        onRequestClose={closeModal}
+      >
+        <ModalImg src={largeImageURL} alt={tags} width="800" height="400" />
+      </Modal>
+    </>
+  );
+};
 
-    return (
-      <>
-        <GalleryItem>
-          <GalleryImg
-            src={webformatURL}
-            alt={tags}
-            onClick={this.openModal}
-          ></GalleryImg>
-        </GalleryItem>
-        <Modal
-          isOpen={isModalOpen}
-          style={modalStyles}
-          onRequestClose={this.closeModal}
-        >
-          <ModalImg src={largeImageURL} alt={tags} width="800" height="400" />
-        </Modal>
-      </>
-    );
-  }
-}
+export default ImageGalleryItem;

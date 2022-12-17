@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { RotatingLines } from 'react-loader-spinner';
 import SearchForm from 'components/SearchForm/SearchForm';
@@ -13,126 +13,91 @@ import {
   InValidQuery,
 } from 'components/App/App.styled';
 
-class App extends Component {
-  state = {
-    query: '',
-    page: 1,
-    perPage: 12,
-    images: [],
-    total: null,
-    loading: false,
-    errorMsg: '',
-  };
-  componentDidMount() {
-    this.setState(prevState => ({
-      pages: prevState.pages,
-      perPage: prevState.perPage,
-    }));
-  }
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.page !== this.state.page ||
-      prevState.query !== this.state.query
-    ) {
-      this.loadImages();
-      // Fetch without Axios
-      // fetch(
-      //   `https://pixabay.com/api/?q=${this.state.query}&page=${this.state.page}&key=30307966-ea2e6055e88053146b4d64f93&image_type=photo&orientation=horizontal&per_page=12`
-      // )
-      //   .then(res => {
-      //     if (res.ok) {
-      //       return res.json();
-      //     }
-      //     return Promise.reject(
-      //       new Error(`There are no images for ${this.state.query}`)
-      //     );
-      //   })
-      //   .then(images => this.setState({ images }))
-      //   .catch(error => this.setState({ error }))
-      //   .finally(() => this.setState({ loading: false }));
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(12);
+  const [images, setImages] = useState([]);
+  const [total, setTotal] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (query === '') {
+      return;
     }
-  }
+    const loadImages = async () => {
+      try {
+        setLoading(true);
+        setImages([]);
+        const images = await axios.get(
+          `https://pixabay.com/api/?q=${query}&page=${page}&key=30307966-ea2e6055e88053146b4d64f93&image_type=photo&orientation=horizontal&per_page=${perPage}`,
+          { controller: controller.signal }
+        );
 
-  loadImages = async () => {
-    const { query, page, perPage } = this.state;
-    try {
-      this.setState({ loading: true, images: [] });
-      const images = await axios.get(
-        `https://pixabay.com/api/?q=${query}&page=${page}&key=30307966-ea2e6055e88053146b4d64f93&image_type=photo&orientation=horizontal&per_page=${perPage}`
-      );
-      this.setState(prevState => ({
-        images: [...prevState.images, ...images.data.hits],
-        // perPage: prevState.perPage,
-        total: images.data.total,
-        errorMsg: '',
-      }));
-    } catch (error) {
-      this.setState({
-        errorMsg: 'Error while loading data. Try again later.',
-      });
-    } finally {
-      this.setState({ loading: false });
-    }
+        setImages(prevImages => [...prevImages, ...images.data.hits]);
+        setTotal(images.data.total);
+        setError('');
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    setTimeout(() => {
+      window.scrollTo({ top: 10000, behavior: 'smooth' });
+    }, 500);
+    loadImages();
+    return () => {
+      controller.abort();
+    };
+  }, [query, page, perPage]);
+
+  const addImages = query => {
+    setQuery(query);
+    setPage(1);
+
+    setPerPage(12);
+    setImages([]);
+    setQuery(query);
   };
 
-  addImages = query => {
-    this.setState({
-      query: query,
-      page: 1,
-      perPage: 12,
-    });
-  };
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-      perPage: prevState.perPage + 12,
-      loading: true,
-      query: prevState.query,
-      // images: [],
-      total: null,
-    }));
+  const loadMore = () => {
+    setPage(prevPage => prevPage + 1);
+    setPerPage(prevPerPage => prevPerPage + 12);
   };
 
-  render() {
-    const { images, total, loading, page, perPage, query } = this.state;
-    const totalPages = Math.ceil(total / perPage);
-    console.log(totalPages);
-    return (
-      <>
-        <SearchForm onSubmit={this.addImages} />
-        <Container>
-          {total === 0 && (
-            <Warning>
-              There are no images for query:
-              <InValidQuery> {query}</InValidQuery>
-            </Warning>
-          )}
+  const totalPages = Math.ceil(total / perPage);
+  return (
+    <>
+      {error && <h1>Error while loading data. Try again later.</h1>}
+      <SearchForm onSubmit={addImages} />
+      <Container>
+        {total === 0 && (
+          <Warning>
+            There are no images for query:
+            <InValidQuery> {query}</InValidQuery>
+          </Warning>
+        )}
 
-          {loading && (
-            <Loading>
-              <RotatingLines strokeColor="blue" />
-            </Loading>
-          )}
-          {!query ? (
-            <Span>While there is nothing to show</Span>
-          ) : (
-            <ImageGallery images={images} />
-          )}
+        {loading && (
+          <Loading>
+            <RotatingLines strokeColor="blue" />
+          </Loading>
+        )}
+        {!query ? (
+          <Span>'While there is nothing to show'</Span>
+        ) : (
+          <ImageGallery images={images} />
+        )}
 
-          {images.length > 0 && query && page !== totalPages && (
-            <LoadMoreBtn onClick={this.loadMore}>Load more</LoadMoreBtn>
-          )}
-        </Container>
-      </>
-    );
-  }
-}
-
-export default App;
-
-// const totalPages = Math.ceil(totalHits / imageApiService.perPage);
-// if (imageApiService.page === totalPages) {
-//   Notify.warning(
-//     "We're sorry, but you've reached the end of search results."
-//   );
-// }
+        {images.length > 0 && query && page !== totalPages && (
+          <LoadMoreBtn type="button" onClick={loadMore}>
+            Load more
+          </LoadMoreBtn>
+        )}
+      </Container>
+    </>
+  );
+};
